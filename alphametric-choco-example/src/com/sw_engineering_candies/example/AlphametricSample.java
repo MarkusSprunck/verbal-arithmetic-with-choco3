@@ -34,10 +34,6 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * 
- * This class is based on Matrix.java form Robert Sedgewick and Kevin Wayne
- * (http://introcs.cs.princeton.edu/java/95linear/Matrix.java.html). 
- * Thank you for sharing it. 
- * 
  */
 
 package com.sw_engineering_candies.example;
