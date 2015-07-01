@@ -39,19 +39,16 @@ package com.sw_engineering_candies.example;
 
 import java.util.HashMap;
 import java.util.Map;
-import static java.lang.System.arraycopy;
 
 import org.chocosolver.solver.Solver;
 import org.chocosolver.solver.constraints.Constraint;
 import org.chocosolver.solver.constraints.ICF;
 import org.chocosolver.solver.constraints.IntConstraintFactory;
 import org.chocosolver.solver.constraints.LogicalConstraintFactory;
-import org.chocosolver.solver.constraints.Operator;
-import org.chocosolver.solver.constraints.nary.sum.Scalar;
+import org.chocosolver.solver.search.solution.Solution;
 import org.chocosolver.solver.variables.IntVar;
 import org.chocosolver.solver.variables.VF;
 import org.chocosolver.solver.variables.VariableFactory;
-import org.chocosolver.util.ESat;
 
 /**
  * Sample application for solving Alphametric Equations with the CHOCO library.
@@ -62,30 +59,32 @@ import org.chocosolver.util.ESat;
  * 
  */
 public class AlphametricSample {
+
 	/**
 	 * Field inputTerm1 is the first term.
 	 */
-	private final String inputTerm1;
+	private final String inputFirst;
+
 	/**
 	 * Field inputTerm2 is the second term.
 	 */
-	private final String inputTerm2;
+	private final String inputSecond;
+
 	/**
 	 * Field inputResult is the expected result.
 	 */
 	private final String inputResult;
+
 	/**
 	 * Field allUniqueCharacters contains all used characters.
 	 */
 	private final String allUniqueCharacters;
+
 	/**
 	 * Field intVarMap holds all needed variables.
 	 */
 	private final Map<String, IntVar> intVarMap = new HashMap<String, IntVar>();
-	/**
-	 * Field model holds structures for a model of constraint programming
-	 */
-	// private final CPModel model = new CPModel();
+
 	/**
 	 * Field solver for the model.
 	 */
@@ -119,9 +118,10 @@ public class AlphametricSample {
 	 * Method prepareModel defines the constraints
 	 */
 	private void prepareModel() {
-		// 1st Constraint - the first digits are not allowed to be zero)
-		Constraint a = IntConstraintFactory.arithm(intVarMap.get(inputTerm1.substring(0, 1)), ">", 0);
-		Constraint b = IntConstraintFactory.arithm(intVarMap.get(inputTerm2.substring(0, 1)), ">", 0);
+
+		// 1st Constraint - the first digits are not allowed to be zero
+		Constraint a = IntConstraintFactory.arithm(intVarMap.get(inputFirst.substring(0, 1)), ">", 0);
+		Constraint b = IntConstraintFactory.arithm(intVarMap.get(inputSecond.substring(0, 1)), ">", 0);
 		Constraint c = LogicalConstraintFactory.and(a, b);
 		solver.post(c);
 
@@ -132,20 +132,16 @@ public class AlphametricSample {
 		}
 		solver.post(ICF.alldifferent(intVarArray));
 
-		// 3rd Constraint - the "term1 + term2 = result" equation)
-		IntVar OBJ1 = VF.bounded("objective1", 0, 99999, solver);
-		IntVar OBJ2 = VF.bounded("objective2", 0, 99999, solver);
-		IntVar OBJ3 = VF.bounded("objective3", 0, 99999, solver);
-		solver.post(ICF.scalar(getIntVar(inputTerm1), getFactors(inputTerm1), OBJ1));
-		solver.post(ICF.scalar(getIntVar(inputTerm2), getFactors(inputTerm2), OBJ2));
+		// 3rd Constraint - the "First + Second = Result" equation
+		IntVar OBJ1 = VF.bounded("First", 0, 99999999, solver);
+		IntVar OBJ2 = VF.bounded("Second", 0, 99999999, solver);
+		IntVar OBJ3 = VF.bounded("Result", 0, 99999999, solver);
+		solver.post(ICF.scalar(getIntVar(inputFirst), getFactors(inputFirst), OBJ1));
+		solver.post(ICF.scalar(getIntVar(inputSecond), getFactors(inputSecond), OBJ2));
 		solver.post(ICF.scalar(getIntVar(inputResult), getFactors(inputResult), OBJ3));
-		solver.post(ICF.sum(new IntVar[]{OBJ1, OBJ2}, OBJ3));
-
+		solver.post(ICF.sum(new IntVar[] { OBJ1, OBJ2 }, OBJ3));
 	}
 
-	/**
-	 * Method createExpression creates the variables from the input strings
-	 */
 	private int[] getFactors(String valueString) {
 		// Creates the scalar product of the variables
 		int[] lc = new int[valueString.length()];
@@ -169,20 +165,16 @@ public class AlphametricSample {
 	 */
 	private void printResult() {
 		StringBuffer buffer = new StringBuffer();
-		buffer.append("   TASK     : ");
-		buffer.append(inputTerm1);
-		buffer.append(" + ");
-		buffer.append(inputTerm2);
-		buffer.append(" = ");
-		buffer.append(inputResult);
+		buffer.append("\tTASK     : ").append(inputFirst).append(" + ");
+		buffer.append(inputSecond).append(" = ").append(inputResult).append('\n');
+		Solution lastSolution = solver.getSolutionRecorder().getLastSolution();
+		buffer.append("\tSOLUTION : ").append((lastSolution!=null) ? lastSolution.hasBeenFound(): "false");
 		buffer.append('\n');
-		buffer.append("   SOLUTION : ");
-		buffer.append(solver.toString());
-		buffer.append('\n');
-		buffer.append("   RESULT   : ");
-		appendNumber(buffer, inputTerm1);
+
+		buffer.append("\tRESULT   : ");
+		appendNumber(buffer, inputFirst);
 		buffer.append(" + ");
-		appendNumber(buffer, inputTerm2);
+		appendNumber(buffer, inputSecond);
 		buffer.append(" = ");
 		appendNumber(buffer, inputResult.toString());
 		System.out.println(buffer);
@@ -202,8 +194,8 @@ public class AlphametricSample {
 	 * Constructor for AlphametricSample the strings should not be empty
 	 */
 	public AlphametricSample(String term1, String term2, String result) {
-		this.inputTerm1 = term1.toUpperCase();
-		this.inputTerm2 = term2.toUpperCase();
+		this.inputFirst = term1.toUpperCase();
+		this.inputSecond = term2.toUpperCase();
 		this.inputResult = result;
 		this.allUniqueCharacters = removeDuplicateChar(term1 + term2 + result);
 	}
@@ -214,10 +206,7 @@ public class AlphametricSample {
 	public void run() {
 		prepareIntegerVariables();
 		prepareModel();
-
-		// 5. Launch the resolution process
 		solver.findSolution();
-		// 6. Print search statistics
 		printResult();
 	}
 
@@ -225,9 +214,19 @@ public class AlphametricSample {
 	 * Method main contains two test cases
 	 */
 	public static void main(String[] args) {
-		System.out.println("First sample:");
+		System.out.println("1st positive test case:");
 		new AlphametricSample("CRACK", "HACK", "ERROR").run();
-		System.out.println("\nSecond sample:");
+
+		System.out.println("\n2nd positive test case:");
 		new AlphametricSample("SEND", "MORE", "MONEY").run();
+		
+		System.out.println("\n3rd positive test case:");
+		new AlphametricSample("AGONY", "JOY", "GUILT").run();
+		
+		System.out.println("\n4th positive test case:");
+		new AlphametricSample("APPLE", "LEMON", "BANANA").run();
+		
+		System.out.println("\n5th negative test case:");
+		new AlphametricSample("APPLE", "LEMON", "BANANAX").run();
 	}
 }
