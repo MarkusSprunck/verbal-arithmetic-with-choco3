@@ -235,6 +235,6 @@ public class AlphameticSample {
 		new AlphameticSample("APPLE", "LEMON", "BANANAX").run();
 
 		System.out.println("\npositive test case:");
-		new AlphameticSample("SYSTEMA", "ATIMA", "SCURITY").run();
+		new AlphameticSample("SYSTEMA", "ATIMA", "SECURER").run();
 	}
 }
