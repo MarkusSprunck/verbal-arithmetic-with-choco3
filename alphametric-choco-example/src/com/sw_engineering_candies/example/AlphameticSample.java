@@ -51,22 +51,23 @@ import org.chocosolver.solver.variables.VF;
 import org.chocosolver.solver.variables.VariableFactory;
 
 /**
- * Sample application for solving Alphametric Equations with the CHOCO library.
- * CHOCO is a java library for constraint satisfaction problems (CSP) and
- * constraint programming (CP).
+ * Sample application for solving Alphametic Equations with the CHOCO3 library.
+ * CHOCO is a java library for constraint satisfaction problems and constraint
+ * programming.
  * 
- * @see <a href="http://choco.sourceforge.net">http://choco.sourceforge.net</a>
+ * @see <a href="https://github.com/chocoteam/choco3">https://github.com/
+ *      chocoteam/choco3</a>
  * 
  */
-public class AlphametricSample {
+public class AlphameticSample {
 
 	/**
-	 * Field inputTerm1 is the first term.
+	 * Field inputFirst is the first term.
 	 */
 	private final String inputFirst;
 
 	/**
-	 * Field inputTerm2 is the second term.
+	 * Field inputSecond is the second term.
 	 */
 	private final String inputSecond;
 
@@ -76,9 +77,9 @@ public class AlphametricSample {
 	private final String inputResult;
 
 	/**
-	 * Field allUniqueCharacters contains all used characters.
+	 * Field usedCharacters contains all used characters without duplicates.
 	 */
-	private final String allUniqueCharacters;
+	private final String usedCharacters;
 
 	/**
 	 * Field intVarMap holds all needed variables.
@@ -108,8 +109,8 @@ public class AlphametricSample {
 	 * Method prepareIntegerVariables creates all needed variables
 	 */
 	private void prepareIntegerVariables() {
-		for (int i = 0; i < allUniqueCharacters.length(); i++) {
-			String variable = allUniqueCharacters.substring(i, i + 1);
+		for (int i = 0; i < usedCharacters.length(); i++) {
+			String variable = usedCharacters.substring(i, i + 1);
 			intVarMap.put(variable, VariableFactory.integer(variable, 0, 9, solver));
 		}
 	}
@@ -126,20 +127,23 @@ public class AlphametricSample {
 		solver.post(c);
 
 		// 2nd Constraint - all characters have to be different)
-		IntVar[] intVarArray = new IntVar[allUniqueCharacters.length()];
-		for (int i = 0; i < allUniqueCharacters.length(); i++) {
-			intVarArray[i] = intVarMap.get(allUniqueCharacters.substring(i, i + 1));
+		IntVar[] intVarArray = new IntVar[usedCharacters.length()];
+		for (int i = 0; i < usedCharacters.length(); i++) {
+			intVarArray[i] = intVarMap.get(usedCharacters.substring(i, i + 1));
 		}
 		solver.post(ICF.alldifferent(intVarArray));
 
 		// 3rd Constraint - the "First + Second = Result" equation
-		IntVar OBJ1 = VF.bounded("First", 0, 99999999, solver);
-		IntVar OBJ2 = VF.bounded("Second", 0, 99999999, solver);
-		IntVar OBJ3 = VF.bounded("Result", 0, 99999999, solver);
-		solver.post(ICF.scalar(getIntVar(inputFirst), getFactors(inputFirst), OBJ1));
-		solver.post(ICF.scalar(getIntVar(inputSecond), getFactors(inputSecond), OBJ2));
-		solver.post(ICF.scalar(getIntVar(inputResult), getFactors(inputResult), OBJ3));
+		IntVar OBJ1 = getConstraint("First", inputFirst);
+		IntVar OBJ2 = getConstraint("Second", inputSecond);
+		IntVar OBJ3 = getConstraint("Result", inputResult);
 		solver.post(ICF.sum(new IntVar[] { OBJ1, OBJ2 }, OBJ3));
+	}
+
+	private IntVar getConstraint(String name, String term) {
+		IntVar OBJ1 = VF.bounded(name, 0, 99999999, solver);
+		solver.post(ICF.scalar(getIntVar(term), getFactors(term), OBJ1));
+		return OBJ1;
 	}
 
 	private int[] getFactors(String valueString) {
@@ -168,7 +172,7 @@ public class AlphametricSample {
 		buffer.append("\tTASK     : ").append(inputFirst).append(" + ");
 		buffer.append(inputSecond).append(" = ").append(inputResult).append('\n');
 		Solution lastSolution = solver.getSolutionRecorder().getLastSolution();
-		buffer.append("\tSOLUTION : ").append((lastSolution!=null) ? lastSolution.hasBeenFound(): "false");
+		buffer.append("\tSOLUTION : ").append((lastSolution != null) ? lastSolution.hasBeenFound() : "false");
 		buffer.append('\n');
 
 		buffer.append("\tRESULT   : ");
@@ -193,11 +197,11 @@ public class AlphametricSample {
 	/**
 	 * Constructor for AlphametricSample the strings should not be empty
 	 */
-	public AlphametricSample(String term1, String term2, String result) {
-		this.inputFirst = term1.toUpperCase();
-		this.inputSecond = term2.toUpperCase();
-		this.inputResult = result;
-		this.allUniqueCharacters = removeDuplicateChar(term1 + term2 + result);
+	public AlphameticSample(String first, String second, String result) {
+		this.inputFirst = first.toUpperCase();
+		this.inputSecond = second.toUpperCase();
+		this.inputResult = result.toUpperCase();
+		this.usedCharacters = removeDuplicateChar(first + second + result);
 	}
 
 	/**
@@ -211,22 +215,26 @@ public class AlphametricSample {
 	}
 
 	/**
-	 * Method main contains two test cases
+	 * Method main contains some test cases
 	 */
 	public static void main(String[] args) {
-		System.out.println("1st positive test case:");
-		new AlphametricSample("CRACK", "HACK", "ERROR").run();
 
-		System.out.println("\n2nd positive test case:");
-		new AlphametricSample("SEND", "MORE", "MONEY").run();
-		
-		System.out.println("\n3rd positive test case:");
-		new AlphametricSample("AGONY", "JOY", "GUILT").run();
-		
-		System.out.println("\n4th positive test case:");
-		new AlphametricSample("APPLE", "LEMON", "BANANA").run();
-		
-		System.out.println("\n5th negative test case:");
-		new AlphametricSample("APPLE", "LEMON", "BANANAX").run();
+		System.out.println("\npositive test case:");
+		new AlphameticSample("CRACK", "HACK", "ERROR").run();
+
+		System.out.println("\npositive test case:");
+		new AlphameticSample("SEND", "MORE", "MONEY").run();
+
+		System.out.println("\npositive test case:");
+		new AlphameticSample("AGONY", "JOY", "GUILT").run();
+
+		System.out.println("\npositive test case:");
+		new AlphameticSample("APPLE", "LEMON", "BANANA").run();
+
+		System.out.println("\nnegative test case:");
+		new AlphameticSample("APPLE", "LEMON", "BANANAX").run();
+
+		System.out.println("\npositive test case:");
+		new AlphameticSample("SYSTEMA", "ATIMA", "SCURITY").run();
 	}
 }
