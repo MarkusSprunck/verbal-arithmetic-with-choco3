@@ -1,4 +1,5 @@
-# How to Solve Verbal Arithmetic with Constraint Programming in Java with Choco3?
+How to Solve Verbal Arithmetic with Constraint Programming in Java with Choco3?
+-------------------------------------------------------------------------------
 
 Project       : Eclipse Java EE IDE for Web Developers.
 
